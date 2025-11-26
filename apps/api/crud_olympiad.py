@@ -1,7 +1,7 @@
 # apps/api/crud_olympiad.py
 from typing import List, Optional
 from sqlmodel import select
-from shared.db.engine import get_session # type: ignore
+from shared.db.engine import get_session
 from apps.api.models_olympiad import Olympiad
 
 def create_olympiad(obj: Olympiad) -> Olympiad:
