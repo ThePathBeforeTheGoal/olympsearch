@@ -30,8 +30,8 @@ class Olympiad(SQLModel, table=True):
     prize: Optional[str] = Field(default=None)  # "льгота БВИ, 100к руб, диплом I степени"
 
     # === Парсинг и дедупликация ===
-    source_url: str = Field(max_length=1000)
-    content_hash: str = Field(index=True, max_length=64)  # для предотвращения дублей
+    source_url: Optional[str] = Field(default=None, max_length=1000) 
+    content_hash: Optional[str] = Field(default=None, index=True, max_length=64, nullable=True)  # для предотвращения дублей
 
     # === Статусы ===
     is_active: bool = Field(default=True, index=True)
