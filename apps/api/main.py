@@ -36,11 +36,12 @@ else:
 # Добавляем middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allow_origins,
+    allow_origins=["*"],  # временно только для отладки
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Подключаем маршруты
 app.include_router(olympiads.router)
