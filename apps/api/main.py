@@ -33,7 +33,7 @@ else:
         "https://olympsearch-frontend.vercel.app",  # production frontend (замени при необходимости)
     ]
 
-# Добавляем middleware
+# ЗДЕСЬ НУЖНО ВЕРНУТЬ ССЫЛКУ ОБЯЗАТЕЛЬНО НА ФРОНТ АААААААААААААААААААААААААААААААААА
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # временно только для отладки

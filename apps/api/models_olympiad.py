@@ -40,3 +40,5 @@ class Olympiad(SQLModel, table=True):
     # === Аудит ===
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    logo_url: Optional[str] = None
