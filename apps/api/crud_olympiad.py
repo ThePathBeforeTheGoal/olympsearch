@@ -7,18 +7,13 @@ from apps.api.models_olympiad import Olympiad
 import re
 import unicodedata
 
-
 def slugify(value: str, max_length: int = 100) -> str:
     if not value:
         return ""
-    # Нормализуем строку
     value = unicodedata.normalize("NFKC", value)
-    # Удаляем всё, что не буквы/цифры/подчёрки/пробел/дефис (Unicode-aware)
     value = re.sub(r"[^\w\s-]", "", value, flags=re.U).strip().lower()
-    # Заменяем пробелы и множественные дефисы на один дефис
     value = re.sub(r"[-\s]+", "-", value)
     return value[:max_length].strip("-")
-
 
 def _ensure_unique_slug(session, base_slug: str, max_attempts: int = 100) -> str:
     slug = base_slug
@@ -31,10 +26,8 @@ def _ensure_unique_slug(session, base_slug: str, max_attempts: int = 100) -> str
         i += 1
     raise RuntimeError("Can't generate unique slug")
 
-
 def create_olympiad(obj: Olympiad) -> Olympiad:
     with get_session() as session:
-        # 1. Дедупликация по content_hash
         if obj.content_hash:
             existing = session.exec(
                 select(Olympiad).where(Olympiad.content_hash == obj.content_hash)
@@ -42,15 +35,12 @@ def create_olympiad(obj: Olympiad) -> Olympiad:
             if existing:
                 return existing
 
-        # 2. Автогенерация slug, если не указан
         if not obj.slug:
             base = slugify(obj.title or "olympiad")
             obj.slug = base or "olympiad"
 
-        # 3. Гарантируем уникальность slug
         obj.slug = _ensure_unique_slug(session, obj.slug)
 
-        # 4. Вставляем
         try:
             session.add(obj)
             session.commit()
@@ -58,7 +48,6 @@ def create_olympiad(obj: Olympiad) -> Olympiad:
             return obj
         except IntegrityError:
             session.rollback()
-            # На случай гонки — ищем по hash ещё раз
             if obj.content_hash:
                 existing = session.exec(
                     select(Olympiad).where(Olympiad.content_hash == obj.content_hash)
@@ -67,14 +56,23 @@ def create_olympiad(obj: Olympiad) -> Olympiad:
                     return existing
             raise
 
-
 # ←←←← ЭТИ ДВЕ ФУНКЦИИ ОБЯЗАТЕЛЬНО ДОЛЖНЫ БЫТЬ! ←←←←
 def list_olympiads(limit: int = 100) -> List[Olympiad]:
     with get_session() as session:
         stmt = select(Olympiad).limit(limit)
         return session.exec(stmt).all()
 
-
 def get_olympiad(olympiad_id: int) -> Optional[Olympiad]:
     with get_session() as session:
         return session.get(Olympiad, olympiad_id)
+
+# --- Новые функции ---
+def list_olympiads_by_category(category: str) -> List[Olympiad]:
+    with get_session() as session:
+        stmt = select(Olympiad).where(Olympiad.category == category)
+        return session.exec(stmt).all()
+
+def search_olympiads(q: str) -> List[Olympiad]:
+    with get_session() as session:
+        stmt = select(Olympiad).where(Olympiad.title.ilike(f"%{q}%"))
+        return session.exec(stmt).all()

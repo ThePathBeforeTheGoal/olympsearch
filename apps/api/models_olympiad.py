@@ -41,4 +41,6 @@ class Olympiad(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
+    category: str = Field(index=True, max_length=100, default="Олимпиады")
+
     logo_url: Optional[str] = None
