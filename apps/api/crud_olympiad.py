@@ -6,6 +6,8 @@ from shared.db.engine import get_session
 from apps.api.models_olympiad import Olympiad
 import re
 import unicodedata
+from datetime import datetime, timedelta
+from sqlalchemy import or_, and_, desc, asc
 
 def slugify(value: str, max_length: int = 100) -> str:
     if not value:
@@ -76,3 +78,78 @@ def search_olympiads(q: str) -> List[Olympiad]:
     with get_session() as session:
         stmt = select(Olympiad).where(Olympiad.title.ilike(f"%{q}%"))
         return session.exec(stmt).all()
+def filter_olympiads(
+    category: Optional[str] = None,
+    subjects: List[str] = None,
+    has_prize: Optional[bool] = None,
+    prize_min: Optional[int] = None,
+    deadline_days: Optional[int] = None,
+    is_team: Optional[bool] = None,
+    search: Optional[str] = None,
+    sort: str = "deadline_asc",
+) -> List[Olympiad]:
+    with get_session() as session:
+        stmt = select(Olympiad)
+
+        # Фильтры
+        if category:
+            stmt = stmt.where(Olympiad.category == category)
+        
+        if subjects:
+            conditions = [Olympiad.subjects.contains([s]) for s in subjects]
+            stmt = stmt.where(or_(*conditions))
+
+        if has_prize is not None:
+            if has_prize:
+                stmt = stmt.where(Olympiad.prize.is_not(None), Olympiad.prize != "")
+            else:
+                stmt = stmt.where(or_(Olympiad.prize.is_(None), Olympiad.prize == ""))
+
+        if prize_min is not None:
+            # Ищем числа в строке prize (например "100000 руб", "1 млн")
+            stmt = stmt.where(
+                Olympiad.prize.op("~*")(f"\\b({prize_min}|\\d+ ?000)\\b")
+            )
+
+        if deadline_days is not None:
+            deadline = datetime.utcnow() + timedelta(days=deadline_days)
+            stmt = stmt.where(
+                Olympiad.registration_deadline <= deadline,
+                Olympiad.registration_deadline.is_not(None)
+            )
+
+        if is_team is not None:
+            stmt = stmt.where(Olympiad.is_team == is_team)
+
+        if search:
+            stmt = stmt.where(Olympiad.title.ilike(f"%{search}%"))
+
+        # Сортировка
+        if sort == "deadline_asc":
+            stmt = stmt.where(Olympiad.registration_deadline.is_not(None)).order_by(
+                asc(Olympiad.registration_deadline)
+            )
+        elif sort == "deadline_desc":
+            stmt = stmt.where(Olympiad.registration_deadline.is_not(None)).order_by(
+                desc(Olympiad.registration_deadline)
+            )
+        elif sort == "title":
+            stmt = stmt.order_by(asc(Olympiad.title))
+        elif sort == "new":
+            stmt = stmt.order_by(desc(Olympiad.created_at))
+
+        stmt = stmt.where(Olympiad.is_active == True)
+
+        return session.exec(stmt).all()
+    
+def get_all_subjects() -> List[str]:
+    with get_session() as session:
+        stmt = select(Olympiad.subjects)
+        results = session.exec(stmt).all()
+        
+        unique_subjects = set()
+        for subj_list in results:
+            if subj_list:
+                unique_subjects.update(subj_list)
+        
+        return sorted(list(unique_subjects))
