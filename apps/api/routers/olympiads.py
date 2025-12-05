@@ -1,26 +1,29 @@
-# apps/api/routers/olympiad.py
+# apps/api/routers/olympiads.py
 from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional
 from apps.api.models_olympiad import Olympiad
-from apps.api.crud_olympiad import get_all_subjects  # новую функцию добавим ниже
 from apps.api.crud_olympiad import (
     create_olympiad,
     list_olympiads,
     get_olympiad,
     list_olympiads_by_category,
     search_olympiads,
-    filter_olympiads,        # ← НОВАЯ ФУНКЦИЯ (добавим ниже)
+    filter_olympiads,
+    get_all_subjects,
 )
 
 router = APIRouter(prefix="/api/v1/olympiads", tags=["olympiads"])
+
 
 @router.post("/", response_model=Olympiad)
 def create(item: Olympiad):
     return create_olympiad(item)
 
+
 @router.get("/", response_model=List[Olympiad])
 def read_all(limit: int = 100):
     return list_olympiads(limit=limit)
+
 
 @router.get("/{olympiad_id}", response_model=Olympiad)
 def read_one(olympiad_id: int):
@@ -29,16 +32,20 @@ def read_one(olympiad_id: int):
         raise HTTPException(404, "Not found")
     return obj
 
-# Старые
+
+# --- Категории ---
 @router.get("/category/{category}", response_model=List[Olympiad])
 def read_category(category: str):
     return list_olympiads_by_category(category)
 
+
+# --- Поиск ---
 @router.get("/search/", response_model=List[Olympiad])
 def search(q: str):
     return search_olympiads(q)
 
-# НОВЫЙ МОЩНЫЙ ФИЛЬТР — СЕРДЦЕ ВСЕГО!
+
+# --- Мощный фильтр ---
 @router.get("/filter", response_model=List[Olympiad])
 def filter_olympiads_endpoint(
     category: Optional[str] = Query(None, description="Точное название категории"),
@@ -63,6 +70,7 @@ def filter_olympiads_endpoint(
         search=search,
         sort=sort,
     )
+
 
 @router.get("/subjects", response_model=List[str])
 def get_subjects():
