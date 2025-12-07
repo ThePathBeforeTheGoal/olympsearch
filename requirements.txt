@@ -4,3 +4,8 @@ sqlmodel
 psycopg2-binary
 pydantic-settings
 alembic
+pyjwt[crypto]
+requests
+cryptography
+python-multipart
+requests

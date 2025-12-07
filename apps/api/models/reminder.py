@@ -3,9 +3,7 @@ from sqlmodel import SQLModel, Field
 from typing import Optional
 from datetime import datetime
 from sqlalchemy import Column
-from sqlalchemy.dialects.postgresql import JSONB  # либо JSON если предпочитаешь
-from datetime import datetime
-from typing import Optional
+from sqlalchemy.dialects.postgresql import JSONB
 
 class Reminder(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -19,4 +17,4 @@ class Reminder(SQLModel, table=True):
     last_attempt_at: Optional[datetime] = None
     fail_reason: Optional[str] = None
     recurrence: Optional[str] = None
-    metadata: dict = Field(default_factory=dict, sa_column=Column("JSONB"))
+    metadata: dict = Field(default_factory=dict, sa_column=Column(JSONB))

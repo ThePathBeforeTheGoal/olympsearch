@@ -3,19 +3,26 @@ import os
 from fastapi import FastAPI
 from sqlmodel import SQLModel, create_engine
 from shared.settings import settings
-import apps.api.models_olympiad  # noqa: F401  -- чтобы SQLModel.metadata видел модель
 from apps.api.routers import olympiads
 from fastapi.middleware.cors import CORSMiddleware
 # apps/api/main.py — добавь эти импорты
-import apps.api.models.category   # ← НОВОЕ
-import apps.api.models.organizer  # ← НОВОЕ
-import apps.api.models.subscription  # noqa
-import apps.api.models.favorite  # noqa
-import apps.api.models.reminder  # noqa
+import apps.api.models_olympiad
+import apps.api.models.category
+import apps.api.models.organizer
+import apps.api.models.subscription
+import apps.api.models.favorite
+import apps.api.models.reminder
 # В main.py добавь:
-from apps.api.routers import categories  # ← новый импорт
-from apps.api.routers import favorites, reminders, webhooks, subscriptions
-
+# Роутеры
+from apps.api.routers import (
+    olympiads,
+    categories,
+    favorites,
+    reminders,
+    webhooks,
+    subscriptions,
+    organizers,
+)
 
 # Создаём подключение к базе
 engine = create_engine(settings.DATABASE_URL, echo=True)
@@ -30,50 +37,43 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# --- CORS: читаем из окружения ALLOWED_ORIGINS (кома-разделённый список) ---
+# === CORS ===
 _allowed = os.getenv("ALLOWED_ORIGINS", "").strip()
 if _allowed:
-    # если задано - разбираем список
     allow_origins = [s.strip() for s in _allowed.split(",") if s.strip()]
 else:
-    # безопасный набор по умолчанию (локальная разработка + ожидаемый Vercel-домен)
+    # Дефолт для локальной разработки
     allow_origins = [
-        "http://localhost:3000",  # Next.js dev
-        "http://localhost:8000",  # Swagger / локальный бэкенд (если нужен)
-        "https://olympsearch-frontend.vercel.app",  # production frontend (замени при необходимости)
+        "http://localhost:3000",
+        "https://olympsearch-frontend.vercel.app",
     ]
 
-# ЗДЕСЬ НУЖНО ВЕРНУТЬ ССЫЛКУ ОБЯЗАТЕЛЬНО НА ФРОНТ АААААААААААААААААААААААААААААААААА
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # временно только для отладки
+    allow_origins=allow_origins,  # ← ИСПРАВЛЕНО: используем переменную окружения
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-# Подключаем маршруты
-app.include_router(olympiads.router)
-app.include_router(categories.router)
-# регистрируем
+# === Роутеры ===
 app.include_router(olympiads.router)
 app.include_router(categories.router)
 app.include_router(favorites.router)
 app.include_router(reminders.router)
 app.include_router(webhooks.router)
-# app.include_router(subscriptions.router)  # когда готов
+app.include_router(subscriptions.router)
+app.include_router(organizers.router)
 
+# === Корневые эндпоинты ===
 @app.get("/")
 async def root():
     return {
         "message": "OlympSearch API — работает!",
+        "version": "1.0.0",
         "env": settings.ENVIRONMENT,
-        "allowed_origins": allow_origins,  # удобно для отладки (удалите в проде, если нужно)
     }
-
 
 @app.get("/health")
 async def health():
-    # Простая проверка — если дошли сюда, значит приложение запущено
     return {"status": "ok", "database": "connected"}

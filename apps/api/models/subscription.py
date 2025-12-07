@@ -16,6 +16,7 @@ class Plan(SQLModel, table=True):
     reminders_limit: Optional[int] = None
     other_perks: dict = Field(default_factory=dict, sa_column=Column(JSONB))
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class UserSubscription(SQLModel, table=True):
