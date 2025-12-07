@@ -6,6 +6,16 @@ from shared.settings import settings
 import apps.api.models_olympiad  # noqa: F401  -- чтобы SQLModel.metadata видел модель
 from apps.api.routers import olympiads
 from fastapi.middleware.cors import CORSMiddleware
+# apps/api/main.py — добавь эти импорты
+import apps.api.models.category   # ← НОВОЕ
+import apps.api.models.organizer  # ← НОВОЕ
+import apps.api.models.subscription  # noqa
+import apps.api.models.favorite  # noqa
+import apps.api.models.reminder  # noqa
+# В main.py добавь:
+from apps.api.routers import categories  # ← новый импорт
+from apps.api.routers import favorites, reminders, webhooks, subscriptions
+
 
 # Создаём подключение к базе
 engine = create_engine(settings.DATABASE_URL, echo=True)
@@ -45,7 +55,14 @@ app.add_middleware(
 
 # Подключаем маршруты
 app.include_router(olympiads.router)
-
+app.include_router(categories.router)
+# регистрируем
+app.include_router(olympiads.router)
+app.include_router(categories.router)
+app.include_router(favorites.router)
+app.include_router(reminders.router)
+app.include_router(webhooks.router)
+# app.include_router(subscriptions.router)  # когда готов
 
 @app.get("/")
 async def root():
