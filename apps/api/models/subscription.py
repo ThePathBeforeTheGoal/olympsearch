@@ -1,13 +1,13 @@
-# apps/api/models/subscription.py — ФИНАЛЬНАЯ ВЕРСИЯ (ДЕПЛОЙ ВЗЛЕТИТ)
+# apps/api/models/subscription.py — ФИНАЛЬНАЯ РАБОЧАЯ ВЕРСИЯ
 from sqlmodel import SQLModel, Field
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from typing import Optional
 from datetime import datetime
 
-# 1. Сначала Plan — без проблем
+
 class Plan(SQLModel, table=True):
-    __tablename__ = "plans"  # ← Явно указываем имя таблицы
+    __tablename__ = "plans"
 
     id: Optional[int] = Field(default=None, primary_key=True)
     plan_key: str = Field(unique=True, index=True)
@@ -19,13 +19,15 @@ class Plan(SQLModel, table=True):
     other_perks: dict = Field(default_factory=dict, sa_column=Column(JSONB))
 
 
-# 2. UserSubscription — УБРАЛИ foreign_key отовсюду!
 class UserSubscription(SQLModel, table=True):
     __tablename__ = "user_subscriptions"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: str = Field(sa_column=Column(UUID(as_uuid=False)), index=True)
-    plan_key: str = Field(index=True)  # ← БЕЗ foreign_key! Только индекс!
+    
+    # ВАЖНО: только sa_column — index нельзя!
+    user_id: str = Field(sa_column=Column(UUID(as_uuid=False)))
+    plan_key: str = Field()  # Просто строка — без foreign_key и без index
+
     status: str = Field(default="inactive")
     provider: Optional[str] = None
     provider_payment_id: Optional[str] = None
@@ -37,7 +39,6 @@ class UserSubscription(SQLModel, table=True):
     extra_data: dict = Field(default_factory=dict, sa_column=Column(JSONB))
 
 
-# 3. SubscriptionAudit — FK только к своей таблице
 class SubscriptionAudit(SQLModel, table=True):
     __tablename__ = "subscription_audit"
 
