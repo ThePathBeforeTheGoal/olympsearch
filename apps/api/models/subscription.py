@@ -1,7 +1,6 @@
-# apps/api/models/subscription.py
 from sqlmodel import SQLModel, Field
 from sqlalchemy import Column
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from typing import Optional
 from datetime import datetime
 
@@ -17,7 +16,7 @@ class Plan(SQLModel, table=True):
 
 class UserSubscription(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: str = Field(foreign_key="auth.users.id")
+    user_id: str = Field(sa_column=Column(UUID(as_uuid=False)))  # ← УБРАЛИ foreign_key
     plan_key: str = Field(foreign_key="plans.plan_key")
     status: str = Field(default="inactive")
     provider: Optional[str] = None
@@ -27,7 +26,7 @@ class UserSubscription(SQLModel, table=True):
     auto_renew: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-    extra_data: dict = Field(default_factory=dict, sa_column=Column(JSONB))  # ← ИСПРАВЛЕНО
+    extra_data: dict = Field(default_factory=dict, sa_column=Column(JSONB))
 
 class SubscriptionAudit(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
