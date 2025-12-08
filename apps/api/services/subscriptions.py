@@ -59,7 +59,7 @@ def activate_subscription(session: Session, user_id: str, plan_key: str, provide
         auto_renew=False if provider is None else True,
         created_at=now,
         updated_at=now,
-        metadata=metadata or {}
+        extra_data=metadata or {}
     )
     session.add(sub)
     session.commit()

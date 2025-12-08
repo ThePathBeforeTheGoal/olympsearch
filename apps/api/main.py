@@ -12,6 +12,8 @@ import apps.api.models.organizer
 import apps.api.models.subscription
 import apps.api.models.favorite
 import apps.api.models.reminder
+import uvicorn
+import os
 # В main.py добавь:
 # Роутеры
 from apps.api.routers import (
@@ -64,6 +66,17 @@ app.include_router(reminders.router)
 app.include_router(webhooks.router)
 app.include_router(subscriptions.router)
 app.include_router(organizers.router)
+
+if __name__ == "__main__":
+    # Render требует PORT из окружения (дефолт 10000)
+    port = int(os.getenv("PORT", 10000))
+    uvicorn.run(
+        "apps.api.main:app",
+        host="0.0.0.0",  # Обязательно 0.0.0.0 для Render
+        port=port,
+        reload=False,  # В проде reload=False
+        log_level="info"
+    )
 
 # === Корневые эндпоинты ===
 @app.get("/")
