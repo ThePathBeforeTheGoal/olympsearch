@@ -1,4 +1,4 @@
-# apps/api/models/reminder.py
+# apps/api/models/reminder.py — ИСПРАВЛЕНО
 from sqlmodel import SQLModel, Field
 from typing import Optional
 from datetime import datetime
@@ -17,4 +17,4 @@ class Reminder(SQLModel, table=True):
     last_attempt_at: Optional[datetime] = None
     fail_reason: Optional[str] = None
     recurrence: Optional[str] = None
-    metadata: dict = Field(default_factory=dict, sa_column=Column(JSONB))
+    extra_data: dict = Field(default_factory=dict, sa_column=Column(JSONB))  # ← ИСПРАВЛЕНО!
