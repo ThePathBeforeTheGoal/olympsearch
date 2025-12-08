@@ -4,7 +4,7 @@ from sqlmodel import Session, select
 from typing import List
 from shared.db.engine import get_session
 from apps.api.models.reminder import Reminder
-from auth import get_current_user
+from apps.api.auth import get_current_user, get_admin_user
 
 router = APIRouter(prefix="/api/v1/reminders", tags=["reminders"])
 
