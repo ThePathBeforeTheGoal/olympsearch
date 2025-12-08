@@ -1,20 +1,22 @@
-﻿# apps/api/main.py
+﻿# apps/api/main.py — РАБОЧИЙ ПОД ТВОЮ СТРУКТУРУ
 import os
 from fastapi import FastAPI
 from sqlmodel import SQLModel, create_engine
 from shared.settings import settings
-from apps.api.routers import olympiads
 from fastapi.middleware.cors import CORSMiddleware
-# apps/api/main.py — добавь эти импорты
-import apps.api.models_olympiad
+
+# ВАЖНО: ПРАВИЛЬНЫЙ ПОРЯДОК ДЛЯ ТВОИХ ФАЙЛОВ
+# 1. Сначала subscription — там Plan
+# 2. Потом models_olympiad — там Olympiad
+# 3. Потом всё остальное
+
+import apps.api.models.subscription      # ← ПЕРВЕРХ! Содержит Plan
+import apps.api.models_olympiad         # ← ВТОРОЙ! Содержит Olympiad
 import apps.api.models.category
 import apps.api.models.organizer
-import apps.api.models.subscription
 import apps.api.models.favorite
 import apps.api.models.reminder
-import uvicorn
-import os
-# В main.py добавь:
+
 # Роутеры
 from apps.api.routers import (
     olympiads,
@@ -26,12 +28,11 @@ from apps.api.routers import (
     organizers,
 )
 
-# Создаём подключение к базе
-engine = create_engine(settings.DATABASE_URL, echo=True)
-
-# Создаём все таблицы (если их ещё нет)
+# === База ===
+engine = create_engine(settings.DATABASE_URL, echo=False)
 SQLModel.metadata.create_all(engine)
 
+# === Приложение ===
 app = FastAPI(
     title="OlympSearch API",
     version="1.0.0",
@@ -41,18 +42,15 @@ app = FastAPI(
 
 # === CORS ===
 _allowed = os.getenv("ALLOWED_ORIGINS", "").strip()
-if _allowed:
-    allow_origins = [s.strip() for s in _allowed.split(",") if s.strip()]
-else:
-    # Дефолт для локальной разработки
-    allow_origins = [
-        "http://localhost:3000",
-        "https://olympsearch-frontend.vercel.app",
-    ]
+allow_origins = (
+    [s.strip() for s in _allowed.split(",") if s.strip()]
+    if _allowed
+    else ["http://localhost:3000", "https://olympsearch-frontend.vercel.app"]
+)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allow_origins,  # ← ИСПРАВЛЕНО: используем переменную окружения
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -67,25 +65,16 @@ app.include_router(webhooks.router)
 app.include_router(subscriptions.router)
 app.include_router(organizers.router)
 
+# === Запуск для Render ===
 if __name__ == "__main__":
-    # Render требует PORT из окружения (дефолт 10000)
+    import uvicorn
     port = int(os.getenv("PORT", 10000))
-    uvicorn.run(
-        "apps.api.main:app",
-        host="0.0.0.0",  # Обязательно 0.0.0.0 для Render
-        port=port,
-        reload=False,  # В проде reload=False
-        log_level="info"
-    )
+    uvicorn.run("apps.api.main:app", host="0.0.0.0", port=port, log_level="info")
 
-# === Корневые эндпоинты ===
+# === Эндпоинты ===
 @app.get("/")
 async def root():
-    return {
-        "message": "OlympSearch API — работает!",
-        "version": "1.0.0",
-        "env": settings.ENVIRONMENT,
-    }
+    return {"message": "OlympSearch API — работает!", "version": "1.0.0"}
 
 @app.get("/health")
 async def health():
