@@ -1,4 +1,4 @@
-# apps/api/routers/olympiads.py
+# apps/api/routers/olympiads.py — ФИНАЛЬНАЯ ВЕРСИЯ (ДЕПЛОЙ ВЗЛЕТИТ)
 from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional
 from apps.api.models_olympiad import Olympiad
@@ -14,38 +14,7 @@ from apps.api.crud_olympiad import (
 
 router = APIRouter(prefix="/api/v1/olympiads", tags=["olympiads"])
 
-
-@router.post("/", response_model=Olympiad)
-def create(item: Olympiad):
-    return create_olympiad(item)
-
-
-@router.get("/", response_model=List[Olympiad])
-def read_all(limit: int = 100):
-    return list_olympiads(limit=limit)
-
-
-@router.get("/{olympiad_id}", response_model=Olympiad)
-def read_one(olympiad_id: int):
-    obj = get_olympiad(olympiad_id)
-    if not obj:
-        raise HTTPException(404, "Not found")
-    return obj
-
-
-# --- Категории ---
-@router.get("/category/{category}", response_model=List[Olympiad])
-def read_category(category: str):
-    return list_olympiads_by_category(category)
-
-
-# --- Поиск ---
-@router.get("/search/", response_model=List[Olympiad])
-def search(q: str):
-    return search_olympiads(q)
-
-
-# --- Мощный фильтр ---
+# 1. ФИЛЬТР — ПЕРВЫЙ! (чтобы не конфликтовал с /{olympiad_id})
 @router.get("/filter", response_model=List[Olympiad])
 def filter_olympiads_endpoint(
     category: Optional[str] = Query(None, description="Точное название категории"),
@@ -71,7 +40,31 @@ def filter_olympiads_endpoint(
         sort=sort,
     )
 
+# 2. Остальные роуты — в любом порядке
+@router.post("/", response_model=Olympiad)
+def create(item: Olympiad):
+    return create_olympiad(item)
+
+@router.get("/", response_model=List[Olympiad])
+def read_all(limit: int = 100):
+    return list_olympiads(limit=limit)
+
+@router.get("/category/{category}", response_model=List[Olympiad])
+def read_category(category: str):
+    return list_olympiads_by_category(category)
+
+@router.get("/search/", response_model=List[Olympiad])
+def search(q: str):
+    return search_olympiads(q)
 
 @router.get("/subjects", response_model=List[str])
 def get_subjects():
     return get_all_subjects()
+
+# 3. ОДИН — ПОСЛЕДНИЙ! (чтобы не ловил /filter)
+@router.get("/{olympiad_id}", response_model=Olympiad)
+def read_one(olympiad_id: int):
+    obj = get_olympiad(olympiad_id)
+    if not obj:
+        raise HTTPException(404, "Not found")
+    return obj
