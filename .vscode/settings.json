@@ -2,5 +2,20 @@
   "python.analysis.extraPaths": [
     "."
   ],
-  "python.envFile": "${workspaceFolder}/.env"
+  "python.envFile": "${workspaceFolder}/.env",
+
+  // Убираем ложные предупреждения "is not accessed"
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportUnusedImport": "none",
+    "reportUnusedClass": "none",
+    "reportUnusedFunction": "none",
+    "reportUnusedVariable": "none"
+  },
+
+  // Полностью выключаем Pylint и Flake8 — они только мешают
+  "python.linting.enabled": false,
+  "python.linting.pylintEnabled": false,
+  "python.linting.flake8Enabled": false,
+  "python.linting.pycodestyleEnabled": false
 }
