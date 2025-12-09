@@ -1,4 +1,4 @@
-﻿# apps/api/main.py — РАБОЧИЙ ПОД ТВОЮ СТРУКТУРУ
+﻿# apps/api/main.py
 import logging
 import os
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,13 +6,11 @@ from fastapi import FastAPI
 from sqlmodel import SQLModel, create_engine
 from shared.settings import settings
 
-# ВАЖНО: ПРАВИЛЬНЫЙ ПОРЯДОК ДЛЯ ТВОИХ ФАЙЛОВ
-# 1. Сначала subscription — там Plan
-# 2. Потом models_olympiad — там Olympiad
-# 3. Потом всё остальное
 logger = logging.getLogger("uvicorn.error")
-import apps.api.models.subscription      # ← ПЕРВЕРХ! Содержит Plan
-import apps.api.models_olympiad         # ← ВТОРОЙ! Содержит Olympiad
+
+# Импорты моделей (порядок важен)
+import apps.api.models.subscription      # Plan
+import apps.api.models_olympiad         # Olympiad
 import apps.api.models.category
 import apps.api.models.organizer
 import apps.api.models.favorite
@@ -29,9 +27,9 @@ from apps.api.routers import (
     organizers,
 )
 
-# === База ===
+# === Не вызываем create_all на этапе импорта ===
+# (Если вам нужно в dev создать таблицы автоматически — используйте init_db() ниже)
 engine = create_engine(settings.DATABASE_URL, echo=False)
-SQLModel.metadata.create_all(engine)
 
 # === Приложение ===
 app = FastAPI(
@@ -48,10 +46,15 @@ if _allowed:
 else:
     allow_origins = ["*"]  # временно — разрешить все источники для отладки
 
+# Если origin == ["*"], нельзя одновременно включать credentials в безопасном режиме браузера.
+allow_credentials = False if allow_origins == ["*"] else True
+
+logger.info("CORS allow_origins: %s allow_credentials: %s", allow_origins, allow_credentials)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
-    allow_credentials=True,
+    allow_credentials=allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -65,8 +68,15 @@ app.include_router(webhooks.router)
 app.include_router(subscriptions.router)
 app.include_router(organizers.router)
 
-# === Запуск для Render ===
+# === Запуск для Render / локали ===
+def _maybe_init_db():
+    # Включите INIT_DB=true в env, если хотите, чтобы при старте создавались таблицы (dev only)
+    if os.getenv("INIT_DB", "").lower() in ("1", "true", "yes"):
+        logger.info("INIT_DB set — creating database tables (SQLModel.metadata.create_all)...")
+        SQLModel.metadata.create_all(engine)
+
 if __name__ == "__main__":
+    _maybe_init_db()
     import uvicorn
     port = int(os.getenv("PORT", 10000))
     uvicorn.run("apps.api.main:app", host="0.0.0.0", port=port, log_level="info")
