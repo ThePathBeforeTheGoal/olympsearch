@@ -9,8 +9,14 @@ _engine: Optional[Engine] = None
 def get_engine() -> Engine:
     global _engine
     if _engine is None:
-        # echo=False чтобы не засорять логи
-        _engine = create_engine(settings.DATABASE_URL, echo=False, pool_pre_ping=True)
+        # Уменьшаем размер пула для совместимости с PgBouncer / Supabase
+        _engine = create_engine(
+            settings.DATABASE_URL,
+            echo=False,
+            pool_pre_ping=True,
+            pool_size=1,
+            max_overflow=0,
+        )
     return _engine
 
 def get_session() -> Generator[Session, None, None]:

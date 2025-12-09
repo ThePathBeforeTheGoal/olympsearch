@@ -1,14 +1,19 @@
-# apps/api/routers/categories.py
-from fastapi import APIRouter, Depends
-from sqlmodel import select
+# apps/api/routers/categories.py  (временно)
+from fastapi import APIRouter, HTTPException
+from sqlmodel import select, Session
 from typing import List
-from shared.db.engine import get_session
+from shared.db.engine import get_engine
 from apps.api.models.category import Category
-from sqlmodel import Session
 
 router = APIRouter(prefix="/api/v1/categories", tags=["categories"])
 
 @router.get("/", response_model=List[Category])
-def get_categories(session: Session = Depends(get_session)):
-    stmt = select(Category).where(Category.is_active == True).order_by(Category.sort_order)
-    return session.exec(stmt).all()
+def get_categories():
+    engine = get_engine()
+    try:
+        with Session(engine) as session:
+            stmt = select(Category).where(Category.is_active == True).order_by(Category.sort_order)
+            return session.exec(stmt).all()
+    except Exception as e:
+        # временная диагностическая отдача
+        raise HTTPException(status_code=500, detail=str(e))
