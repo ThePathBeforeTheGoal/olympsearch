@@ -1,38 +1,51 @@
 ﻿# shared/db/engine.py
 from sqlmodel import SQLModel, create_engine, Session
-from typing import Generator, Optional
+from typing import Iterator, Optional
 from sqlalchemy.engine import Engine
+from contextlib import contextmanager
 from shared.settings import settings
 
 _engine: Optional[Engine] = None
 
 def get_engine() -> Engine:
+    """
+    Возвращает singleton Engine.
+    Низкий pool_size и max_overflow=0 — совместимость с PgBouncer/Supabase pooler в Session mode.
+    """
     global _engine
     if _engine is None:
-        # Уменьшаем размер пула для совместимости с PgBouncer / Supabase
         _engine = create_engine(
             settings.DATABASE_URL,
             echo=False,
             pool_pre_ping=True,
+            # Важно: уменьшенный пул для PgBouncer в session mode
             pool_size=1,
             max_overflow=0,
         )
     return _engine
 
-def get_session() -> Generator[Session, None, None]:
+@contextmanager
+def get_session() -> Iterator[Session]:
     """
-    Dependency для FastAPI: yield-ная сессия SQLModel.
-    FastAPI распознаёт функцию с `yield` как generator-dependency и
-    корректно управляет жизненным циклом сессии.
+    Контекстный менеджер: можно использовать как
+        with get_session() as session:
+            ...
+    Это совместимо с текущими CRUD-утилитами.
+
+    Если вы захотите использовать FastAPI dependency (yield-тип),
+    оставим это изменение простым — большинство вызовов используют 'with'.
     """
     engine = get_engine()
-    with Session(engine) as session:
+    session = Session(engine)
+    try:
         yield session
+    finally:
+        session.close()
 
 def init_db():
     """
-    Для MVP: создаём таблицы по metadata.
-    Позже — использовать Alembic для миграций.
+    Для локальной разработки: создаёт таблицы по metadata,
+    если действительно нужно (не вызывается автоматически в проде).
     """
     engine = get_engine()
     SQLModel.metadata.create_all(engine)
