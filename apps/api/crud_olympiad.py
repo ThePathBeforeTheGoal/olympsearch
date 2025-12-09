@@ -91,6 +91,7 @@ def search_olympiads(q: str) -> List[Olympiad]:
         return session.exec(stmt).all()
 
 
+# apps/api/crud_olympiad.py - ИСПРАВЛЕННАЯ ВЕРСИЯ функции filter_olympiads
 def filter_olympiads(
     category: Optional[str] = None,
     subjects: List[str] = None,
@@ -106,7 +107,7 @@ def filter_olympiads(
             Category, Category.id == Olympiad.category_id, isouter=True
         )
 
-        # === Фильтр по категории (поддерживаем и id, и slug) ===
+        # === Фильтр по категории ===
         if category:
             try:
                 # Попробуем как число (id)
@@ -114,7 +115,8 @@ def filter_olympiads(
                 stmt = stmt.where(Olympiad.category_id == cat_id)
             except ValueError:
                 # Иначе — ищем по slug
-                stmt = stmt.where(func.lower(Category.slug) == category.lower())
+                # ВАЖНО: нужно искать в таблице Category по slug
+                stmt = stmt.where(Category.slug == category)
 
         # Остальные фильтры
         if subjects:
@@ -128,7 +130,11 @@ def filter_olympiads(
                 stmt = stmt.where(or_(Olympiad.prize.is_(None), Olympiad.prize == ""))
 
         if prize_min is not None:
-            stmt = stmt.where(Olympiad.prize.op("~*")(f"\\b({prize_min}|\\d+ ?000)\\b"))
+            # Используем более надежную проверку для призов
+            stmt = stmt.where(
+                Olympiad.prize.is_not(None),
+                Olympiad.prize.op("~")("\\d+")  # содержит цифры
+            )
 
         if deadline_days is not None:
             deadline = datetime.utcnow() + timedelta(days=deadline_days)
@@ -159,8 +165,11 @@ def filter_olympiads(
 
         stmt = stmt.where(Olympiad.is_active == True)
 
-        return session.exec(stmt).all()
-
+        # ДЕБАГ: посмотрим SQL запрос
+        print(f"SQL Query: {stmt}")
+        results = session.exec(stmt).all()
+        print(f"Found {len(results)} results")
+        return results
 
 def get_all_subjects() -> List[str]:
     with get_session() as session:
