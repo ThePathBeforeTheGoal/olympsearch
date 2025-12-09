@@ -1,15 +1,16 @@
 ﻿# apps/api/main.py — РАБОЧИЙ ПОД ТВОЮ СТРУКТУРУ
+import logging
 import os
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 from sqlmodel import SQLModel, create_engine
 from shared.settings import settings
-from fastapi.middleware.cors import CORSMiddleware
 
 # ВАЖНО: ПРАВИЛЬНЫЙ ПОРЯДОК ДЛЯ ТВОИХ ФАЙЛОВ
 # 1. Сначала subscription — там Plan
 # 2. Потом models_olympiad — там Olympiad
 # 3. Потом всё остальное
-
+logger = logging.getLogger("uvicorn.error")
 import apps.api.models.subscription      # ← ПЕРВЕРХ! Содержит Plan
 import apps.api.models_olympiad         # ← ВТОРОЙ! Содержит Olympiad
 import apps.api.models.category
