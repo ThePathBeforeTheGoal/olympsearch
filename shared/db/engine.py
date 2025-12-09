@@ -1,37 +1,32 @@
 ﻿# shared/db/engine.py
 from sqlmodel import SQLModel, create_engine, Session
-from typing import Generator, Iterator
+from typing import Generator, Optional
+from sqlalchemy.engine import Engine
 from shared.settings import settings
-from contextlib import contextmanager
 
-_engine = None
+_engine: Optional[Engine] = None
 
-def get_engine():
+def get_engine() -> Engine:
     global _engine
     if _engine is None:
         # echo=False чтобы не засорять логи
         _engine = create_engine(settings.DATABASE_URL, echo=False, pool_pre_ping=True)
     return _engine
 
-@contextmanager
-def get_session() -> Iterator[Session]:
+def get_session() -> Generator[Session, None, None]:
     """
-    Контекстный менеджер для сессий SQLAlchemy / SQLModel.
-    Использование:
-        with get_session() as session:
-            ...
+    Dependency для FastAPI: yield-ная сессия SQLModel.
+    FastAPI распознаёт функцию с `yield` как generator-dependency и
+    корректно управляет жизненным циклом сессии.
     """
     engine = get_engine()
-    session = Session(engine)
-    try:
+    with Session(engine) as session:
         yield session
-    finally:
-        session.close()
 
 def init_db():
     """
     Для MVP: создаём таблицы по metadata.
-    Позже использовать Alembic для миграций.
+    Позже — использовать Alembic для миграций.
     """
     engine = get_engine()
     SQLModel.metadata.create_all(engine)

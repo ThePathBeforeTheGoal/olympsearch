@@ -5,6 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from shared.db.engine import get_session
 from apps.api.models_olympiad import Olympiad
 from apps.api.models.category import Category  # ← важно!
+from sqlalchemy import func
 import re
 import unicodedata
 from datetime import datetime, timedelta
@@ -113,7 +114,7 @@ def filter_olympiads(
                 stmt = stmt.where(Olympiad.category_id == cat_id)
             except ValueError:
                 # Иначе — ищем по slug
-                stmt = stmt.where(Category.slug == category)
+                stmt = stmt.where(func.lower(Category.slug) == category.lower())
 
         # Остальные фильтры
         if subjects:
