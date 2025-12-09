@@ -42,11 +42,10 @@ app = FastAPI(
 
 # === CORS ===
 _allowed = os.getenv("ALLOWED_ORIGINS", "").strip()
-allow_origins = (
-    [s.strip() for s in _allowed.split(",") if s.strip()]
-    if _allowed
-    else ["http://localhost:3000", "https://olympsearch-frontend.vercel.app"]
-)
+if _allowed:
+    allow_origins = [s.strip() for s in _allowed.split(",") if s.strip()]
+else:
+    allow_origins = ["*"]  # временно — разрешить все источники для отладки
 
 app.add_middleware(
     CORSMiddleware,
