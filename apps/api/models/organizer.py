@@ -4,6 +4,7 @@ from datetime import datetime
 from sqlmodel import SQLModel, Field
 
 class Organizer(SQLModel, table=True):
+    __tablename__ = "organizers" 
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(..., max_length=255)
     short_name: Optional[str] = Field(default=None, max_length=100)
