@@ -2,16 +2,16 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import List
 from apps.api.crud.crud_organizer import list_organizers, get_organizer_by_slug, get_olympiads_for_organizer
-from apps.api.models.organizer import Organizer
 from apps.api.models_olympiad import Olympiad
+from apps.api.schemas.organizer import OrganizerOut
 
 router = APIRouter(prefix="/api/v1/organizers", tags=["organizers"])
 
-@router.get("/", response_model=List[Organizer])
+@router.get("/", response_model=list[OrganizerOut])
 def api_list_organizers(limit: int = Query(100, ge=1, le=1000)):
     return list_organizers(limit=limit)
 
-@router.get("/{slug}", response_model=Organizer)
+@router.get("/{slug}", response_model=OrganizerOut)
 def api_get_organizer(slug: str):
     org = get_organizer_by_slug(slug)
     if not org:
