@@ -17,13 +17,8 @@ engine = create_engine(
 # Создаем фабрику сессий
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# ОДНА универсальная функция
 @contextmanager
 def get_session() -> Iterator[Session]:
-    """
-    Работает и как контекстный менеджер (with get_session() as session:)
-    и как генератор для Depends (через @contextmanager декоратор)
-    """
     session = SessionLocal()
     try:
         yield session
@@ -33,3 +28,6 @@ def get_session() -> Iterator[Session]:
         raise
     finally:
         session.close()
+
+# Алиас для совместимости
+get_session_depends = get_session
