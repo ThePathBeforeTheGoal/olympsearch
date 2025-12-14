@@ -2,10 +2,9 @@
 from sqlmodel import create_engine, Session
 from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
-from typing import Iterator
+from typing import Iterator, Generator
 from shared.settings import settings
 
-# Создаем движок
 engine = create_engine(
     settings.DATABASE_URL,
     echo=False,
@@ -14,11 +13,13 @@ engine = create_engine(
     max_overflow=0,
 )
 
-# Создаем фабрику сессий
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+)
 
-@contextmanager
-def get_session() -> Iterator[Session]:
+def get_session() -> Generator[Session, None, None]:
     session = SessionLocal()
     try:
         yield session
