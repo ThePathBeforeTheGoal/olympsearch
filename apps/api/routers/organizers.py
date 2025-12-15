@@ -4,21 +4,44 @@ from typing import List
 from apps.api.crud.crud_organizer import list_organizers, get_organizer_by_slug, get_olympiads_for_organizer
 from apps.api.models_olympiad import Olympiad
 from apps.api.schemas.organizer import OrganizerOut
+from sqlmodel import Session
+
+from fastapi import APIRouter, HTTPException, Depends, Query
+from typing import List
+from sqlmodel import Session
+
+from shared.db.engine import get_session_depends
+from apps.api.crud.crud_organizer import (
+    list_organizers,
+    get_organizer_by_slug,
+    get_olympiads_for_organizer,
+)
+from apps.api.schemas.organizer import OrganizerOut
+from apps.api.models_olympiad import Olympiad
 
 router = APIRouter(prefix="/api/v1/organizers", tags=["organizers"])
 
-@router.get("/", response_model=list[OrganizerOut])
-def api_list_organizers(limit: int = Query(100, ge=1, le=1000)):
-    return list_organizers(limit=limit)
+@router.get("/", response_model=List[OrganizerOut])
+def api_list_organizers(
+    limit: int = Query(100, ge=1, le=1000),
+    session: Session = Depends(get_session_depends),
+):
+    return list_organizers(session=session, limit=limit)
 
 @router.get("/{slug}", response_model=OrganizerOut)
-def api_get_organizer(slug: str):
-    org = get_organizer_by_slug(slug)
+def api_get_organizer(
+    slug: str,
+    session: Session = Depends(get_session_depends),
+):
+    org = get_organizer_by_slug(session=session, slug=slug)
     if not org:
         raise HTTPException(status_code=404, detail="Organizer not found")
     return org
 
 @router.get("/{slug}/olympiads", response_model=List[Olympiad])
-def api_get_organizer_olympiads(slug: str):
-    ols = get_olympiads_for_organizer(slug)
-    return ols
+def api_get_organizer_olympiads(
+    slug: str,
+    session: Session = Depends(get_session_depends),
+):
+    return get_olympiads_for_organizer(session=session, slug=slug)
+
