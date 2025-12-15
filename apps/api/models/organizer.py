@@ -1,20 +1,27 @@
-# apps/api/models/organizer.py — ИСПРАВЛЕНО НАВСЕГДА
+# apps/api/models/organizer.py — ДЕЙСТВИТЕЛЬНО ИСПРАВЛЕНО НАВСЕГДА :)
 from typing import Optional
 from datetime import datetime
 from sqlmodel import SQLModel, Field
+from sqlalchemy import func  # Для автозаполнения дат
 
 class Organizer(SQLModel, table=True):
     __tablename__ = "organizers"
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    name: str = Field(..., max_length=255)
+    name: str = Field(..., max_length=255)  # Required
     short_name: Optional[str] = Field(default=None, max_length=100)
-    slug: str = Field(..., unique=True, max_length=255)
+    slug: str = Field(..., unique=True, max_length=255)  # Required, unique
 
     logo_url: Optional[str] = Field(default=None)
+    banner_url: Optional[str] = Field(default=None)  # Добавлено (missing в твоём коде)
     website_url: Optional[str] = Field(default=None)
     description: Optional[str] = Field(default=None)
+
+    type: Optional[str] = Field(default=None)  # Добавлено (e.g., 'other')
+    region: Optional[str] = Field(default=None)  # Добавлено
+
+    is_verified: bool = Field(default=False)  # Добавлено (bool, default False)
 
     priority: int = Field(default=0)
     is_premium: bool = Field(default=False)
@@ -23,5 +30,9 @@ class Organizer(SQLModel, table=True):
 
     owner_user_id: Optional[str] = Field(default=None, index=True)
 
-    created_at: Optional[datetime] = Field(default=None)
-    updated_at: Optional[datetime] = Field(default=None)
+    contact_email: Optional[str] = Field(default=None)  # Добавлено
+    meta_title: Optional[str] = Field(default=None)  # Добавлено
+    meta_description: Optional[str] = Field(default=None)  # Добавлено
+
+    created_at: Optional[datetime] = Field(sa_default=func.now())  # Автозаполнение
+    updated_at: Optional[datetime] = Field(sa_default=func.now(), sa_onupdate=func.now())  # Автозаполнение и обновление

@@ -1,15 +1,18 @@
-﻿# shared/db/engine.py - САМАЯ ПРОСТАЯ РАБОЧАЯ ВЕРСИЯ
+﻿# shared/db/engine.py - Enhanced version for better logging and clarity
+import logging
+from typing import Generator
+from contextlib import contextmanager
 from sqlmodel import create_engine, Session
 from sqlalchemy.orm import sessionmaker
-from contextlib import contextmanager
-from typing import Iterator, Generator
 from shared.settings import settings
+
+logger = logging.getLogger(__name__)
 
 engine = create_engine(
     settings.DATABASE_URL,
-    echo=False,
+    echo=False,  # Set to True for local debugging
     pool_pre_ping=True,
-    pool_size=1,
+    pool_size=5,  # Increased slightly for better concurrency; adjust based on traffic
     max_overflow=0,
 )
 
@@ -24,11 +27,12 @@ def get_session() -> Generator[Session, None, None]:
     try:
         yield session
         session.commit()
-    except Exception:
+    except Exception as e:
+        logger.exception(f"Database error: {e}")
         session.rollback()
         raise
     finally:
         session.close()
 
-# Алиас для совместимости
+# Alias for FastAPI Depends compatibility
 get_session_depends = get_session

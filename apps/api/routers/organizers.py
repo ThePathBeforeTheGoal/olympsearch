@@ -1,15 +1,7 @@
 # apps/api/routers/organizers.py
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import List
-from apps.api.crud.crud_organizer import list_organizers, get_organizer_by_slug, get_olympiads_for_organizer
-from apps.api.models_olympiad import Olympiad
-from apps.api.schemas.organizer import OrganizerOut
 from sqlmodel import Session
-
-from fastapi import APIRouter, HTTPException, Depends, Query
-from typing import List
-from sqlmodel import Session
-
 from shared.db.engine import get_session_depends
 from apps.api.crud.crud_organizer import (
     list_organizers,
@@ -44,4 +36,3 @@ def api_get_organizer_olympiads(
     session: Session = Depends(get_session_depends),
 ):
     return get_olympiads_for_organizer(session=session, slug=slug)
-
