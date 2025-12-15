@@ -34,5 +34,5 @@ class Organizer(SQLModel, table=True):
     meta_title: Optional[str] = Field(default=None)  # Добавлено
     meta_description: Optional[str] = Field(default=None)  # Добавлено
 
-    created_at: Optional[datetime] = Field(sa_default=func.now())  # Автозаполнение
-    updated_at: Optional[datetime] = Field(sa_default=func.now(), sa_onupdate=func.now())  # Автозаполнение и обновление
+    created_at: Optional[datetime] = Field(default=None, sa_column_kwargs={"server_default": func.now()})
+    updated_at: Optional[datetime] = Field(default=None, sa_column_kwargs={"server_default": func.now(), "onupdate": func.now()})
