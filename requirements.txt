@@ -5,7 +5,6 @@ psycopg2-binary
 pydantic-settings
 alembic
 pyjwt[crypto]
-requests
 cryptography
 python-multipart
 requests>=2.31.0
