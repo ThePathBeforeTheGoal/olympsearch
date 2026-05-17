@@ -4,7 +4,7 @@ from sqlmodel import Session, select
 from shared.db.engine import  get_session_depends
 from apps.api.models.subscription import Plan, UserSubscription, SubscriptionAudit
 from apps.api.services.subscriptions import activate_subscription, cancel_subscription, create_audit
-from apps.api.auth import get_current_user, get_admin_user
+from apps.api.auth_jwt import get_current_user, get_admin_user
 from typing import List, Optional
 from datetime import datetime
 

@@ -10,11 +10,12 @@ logger = logging.getLogger("uvicorn.error")
 
 # Импорты моделей (порядок важен)
 import apps.api.models.subscription      # Plan
-import apps.api.models_olympiad         # Olympiad
+import apps.api.models.olympiad         # Olympiad
 import apps.api.models.category
 import apps.api.models.organizer
 import apps.api.models.favorite
 import apps.api.models.reminder
+from keep_alive import start_keep_alive
 
 # Роутеры
 from apps.api.routers import (
@@ -40,16 +41,15 @@ app = FastAPI(
 )
 
 # === CORS ===
-_allowed = os.getenv("ALLOWED_ORIGINS", "").strip()
-if _allowed:
-    allow_origins = [s.strip() for s in _allowed.split(",") if s.strip()]
+_ALLOWED = os.getenv("ALLOWED_ORIGINS", "")
+if _ALLOWED:
+    allow_origins = [origin.strip() for origin in _ALLOWED.split(",") if origin.strip()]
 else:
-    allow_origins = ["*"]  # временно — разрешить все источники для отладки
+    # Для разработки — все, но с credentials=False
+    allow_origins = ["*"]
 
-# Если origin == ["*"], нельзя одновременно включать credentials в безопасном режиме браузера.
-allow_credentials = False if allow_origins == ["*"] else True
-
-logger.info("CORS allow_origins: %s allow_credentials: %s", allow_origins, allow_credentials)
+# Для безопасности: если есть конкретные origins — включаем credentials
+allow_credentials = allow_origins != ["*"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -74,6 +74,12 @@ def _maybe_init_db():
     if os.getenv("INIT_DB", "").lower() in ("1", "true", "yes"):
         logger.info("INIT_DB set — creating database tables (SQLModel.metadata.create_all)...")
         SQLModel.metadata.create_all(engine)
+
+
+# === Запуск keep_alive для Render (не даём заснуть) ===
+if os.getenv("ENVIRONMENT") == "production":
+    start_keep_alive()
+    logger.info("Keep-alive thread started")
 
 if __name__ == "__main__":
     _maybe_init_db()

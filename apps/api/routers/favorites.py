@@ -5,7 +5,7 @@ from typing import List
 from sqlalchemy.exc import IntegrityError
 from shared.db.engine import get_session_depends  # ← ИЗМЕНИТЬ ИМПОРТ!
 from apps.api.models.favorite import Favorite
-from apps.api.auth import get_current_user, get_admin_user
+from apps.api.auth_jwt import get_current_user, get_admin_user
 
 router = APIRouter(prefix="/api/v1/favorites", tags=["favorites"])
 
