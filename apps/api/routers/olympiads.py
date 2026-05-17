@@ -4,7 +4,7 @@ from typing import List, Optional
 from sqlmodel import Session
 from shared.db.engine import get_session_depends  # ← важно!
 
-from apps.api.models_olympiad import Olympiad
+from apps.api.models.olympiad import Olympiad
 from apps.api.crud_olympiad import (
     create_olympiad,
     list_olympiads,
