@@ -2,7 +2,7 @@
 from sqlmodel import select, Session  # ← ДОБАВИТЬ Session
 from typing import List, Optional
 from apps.api.models.organizer import Organizer
-from apps.api.models_olympiad import Olympiad
+from apps.api.models.olympiad import Olympiad 
 
 # Изменить функцию, чтобы она принимала session как параметр
 def list_organizers(session: Session, limit: int = 100) -> List[Organizer]:

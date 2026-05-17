@@ -9,7 +9,7 @@ from apps.api.crud.crud_organizer import (
     get_olympiads_for_organizer,
 )
 from apps.api.schemas.organizer import OrganizerOut
-from apps.api.models_olympiad import Olympiad
+from apps.api.models.olympiad import Olympiad 
 
 router = APIRouter(prefix="/api/v1/organizers", tags=["organizers"])
 

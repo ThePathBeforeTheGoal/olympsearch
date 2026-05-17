@@ -1,4 +1,4 @@
-# apps/api/models_olympiad.py
+# apps/api/models/olympiad.py
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
 from datetime import datetime

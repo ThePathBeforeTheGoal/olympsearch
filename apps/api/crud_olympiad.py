@@ -3,7 +3,7 @@ from typing import List, Optional
 from sqlmodel import select, Session  # Добавлен Session
 from sqlalchemy.exc import IntegrityError
 # Убрали get_session, т.к. session теперь параметр
-from apps.api.models_olympiad import Olympiad
+from apps.api.models.olympiad import Olympiad
 from apps.api.models.category import Category  # ← важно!
 from sqlalchemy import func
 import re
